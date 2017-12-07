@@ -5,8 +5,7 @@ import java.nio.channels.*;
 import java.nio.charset.*;
 import java.util.*;
 
-public class Server
-{
+public class Server{
   // A pre-allocated buffer for the received data
   static private final ByteBuffer buffer = ByteBuffer.allocate( 16384 );
 
@@ -18,7 +17,7 @@ public class Server
   static public void main( String args[] ) throws Exception {
     // Parse port from command line
     int port = Integer.parseInt( args[0] );
-    
+
     try {
       // Instead of creating a ServerSocket, create a ServerSocketChannel
       ServerSocketChannel ssc = ServerSocketChannel.open();
@@ -136,9 +135,14 @@ public class Server
       return false;
     }
 
+    // Reenvia a mensagem recebida para o cliente F5.c
+    sc.write(buffer);
+    buffer.flip();
+
     // Decode and print the message to stdout
     String message = decoder.decode(buffer).toString();
     System.out.print( message );
+
 
     return true;
   }
