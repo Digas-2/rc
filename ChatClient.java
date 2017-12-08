@@ -5,6 +5,8 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.nio.*;
+import java.nio.channels.*;
+import java.nio.charset.*;
 
 public class ChatClient {
 
@@ -66,11 +68,9 @@ public class ChatClient {
     // na caixa de entrada
     public void newMessage(String message) throws IOException {
         // PREENCHER AQUI com código que envia a mensagem ao servidor
-        String newData = message;
-
-        ByteBuffer buf = ByteBuffer.allocate(newData.lenght());
+        ByteBuffer buf = ByteBuffer.allocate(48;
         buf.clear();
-        buf.put(newData.getBytes());
+        buf.put(message.getBytes());
 
         buf.flip();
 
