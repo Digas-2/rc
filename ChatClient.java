@@ -16,8 +16,7 @@ public class ChatClient {
 
     // Se for necessário adicionar variáveis ao objecto ChatClient, devem
     // ser colocadas aqui
-
-
+    private SocketChannel socketChannel;
 
     
     // Método a usar para acrescentar uma string à caixa de texto
@@ -50,15 +49,16 @@ public class ChatClient {
                 } catch (IOException ex) {
                 } finally {
                    chatBox.setText("");
-                }
-            }
-        });
+               }
+           }
+       });
         // --- Fim da inicialização da interface gráfica
 
         // Se for necessário adicionar código de inicialização ao
         // construtor, deve ser colocado aqui
 
-
+        SocketChannel socketChannel = SocketChannel.open();
+        socketChannel.connect(new InetSocketAddress(server, port));
 
     }
 
@@ -67,8 +67,17 @@ public class ChatClient {
     // na caixa de entrada
     public void newMessage(String message) throws IOException {
         // PREENCHER AQUI com código que envia a mensagem ao servidor
+        String newData = message;
 
+        ByteBuffer buf = ByteBuffer.allocate(48);
+        buf.clear();
+        buf.put(newData.getBytes());
 
+        buf.flip();
+
+        while(buf.hasRemaining()) {
+            socketChannel.write(buf);
+        }
 
     }
 
