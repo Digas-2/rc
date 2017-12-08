@@ -4,7 +4,7 @@ import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-
+import java.nio.*;
 
 public class ChatClient {
 
@@ -48,15 +48,14 @@ public class ChatClient {
                     newMessage(chatBox.getText());
                 } catch (IOException ex) {
                 } finally {
-                   chatBox.setText("");
-               }
-           }
-       });
+                 chatBox.setText("");
+             }
+         }
+     });
         // --- Fim da inicialização da interface gráfica
 
         // Se for necessário adicionar código de inicialização ao
         // construtor, deve ser colocado aqui
-
         SocketChannel socketChannel = SocketChannel.open();
         socketChannel.connect(new InetSocketAddress(server, port));
 
@@ -69,7 +68,7 @@ public class ChatClient {
         // PREENCHER AQUI com código que envia a mensagem ao servidor
         String newData = message;
 
-        ByteBuffer buf = ByteBuffer.allocate(48);
+        ByteBuffer buf = ByteBuffer.allocate(newData.lenght());
         buf.clear();
         buf.put(newData.getBytes());
 
