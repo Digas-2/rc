@@ -8,6 +8,13 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.nio.charset.*;
 
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+
 public class ChatClient {
 
     // Variáveis relacionadas com a interface gráfica --- * NÃO MODIFICAR *
@@ -20,14 +27,14 @@ public class ChatClient {
     // ser colocadas aqui
     private SocketChannel socketChannel;
 
-    
+
     // Método a usar para acrescentar uma string à caixa de texto
     // * NÃO MODIFICAR *
     public void printMessage(final String message) {
         chatArea.append(message);
     }
 
-    
+
     // Construtor
     public ChatClient(String server, int port) throws IOException {
 
@@ -58,8 +65,12 @@ public class ChatClient {
 
         // Se for necessário adicionar código de inicialização ao
         // construtor, deve ser colocado aqui
-        SocketChannel socketChannel = SocketChannel.open();
+        socketChannel = SocketChannel.open();
         socketChannel.connect(new InetSocketAddress(server, port));
+
+        if (socketChannel.isConnected())
+  				writeTextArea("Connected!");
+
 
     }
 
@@ -68,7 +79,7 @@ public class ChatClient {
     // na caixa de entrada
     public void newMessage(String message) throws IOException {
         // PREENCHER AQUI com código que envia a mensagem ao servidor
-        ByteBuffer buf = ByteBuffer.allocate(48;
+        ByteBuffer buf = ByteBuffer.allocate(48);
         buf.clear();
         buf.put(message.getBytes());
 
@@ -80,15 +91,21 @@ public class ChatClient {
 
     }
 
-    
     // Método principal do objecto
     public void run() throws IOException {
         // PREENCHER AQUI
+        int bytesRead = 0;
+        while(bytesRead != null) {
+          ByteBuffer buf = ByteBuffer.allocate(16384);
+          bytesRead = socketchannel.read(buf);
 
+          writeTextArea(new String(buf.array()));
+
+        }
 
 
     }
-    
+
 
     // Instancia o ChatClient e arranca-o invocando o seu método run()
     // * NÃO MODIFICAR *
