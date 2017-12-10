@@ -4,6 +4,7 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.nio.charset.*;
 import java.util.*;
+import java.util.Map.Entry;
 
 public class Server{
   // A pre-allocated buffer for the received data
@@ -11,6 +12,7 @@ public class Server{
 
   // Decoder for incoming text -- assume UTF-8
   static private final Charset charset = Charset.forName("UTF8");
+  static private final CharsetEncoder encoder = charset.newEncoder();
   static private final CharsetDecoder decoder = charset.newDecoder();
 
   static private HashMap<String, ArrayList<SocketChannel>> rooms = new HashMap<String, ArrayList<SocketChannel>>();
@@ -153,20 +155,24 @@ static private boolean processInput( SocketChannel sc ) throws IOException {
 
   String[] parts = message.split(" ");
 
-  if(parts[0] == "/nick"){
+  //System.out.println(parts[0]);
+
+  if(parts[0].equals("/nick")){
+    //System.out.println(parts[1]);    
     nick(sc,parts[1]);
   }
 
 
-  else if(parts[0] == "/join"){
+  /*else if(parts[0] == "/join"){
     join(sc,parts[1]);
-  }
+  }*/ 
 
   return true;
 }
 
 
 static private void nick(SocketChannel sc, String nick) throws IOException {
+    //System.out.println(nick);
     if(users.containsValue(nick)) // Se o nick já existe
     send(sc, "ERROR");
     else {
@@ -178,7 +184,7 @@ static private void nick(SocketChannel sc, String nick) throws IOException {
         // Enviar mensagem para os outros utilizadores do room
         sendToOthers(sc, rooms.get(usersRoom.get(sc)), "NEWNICK " + oldnick + " " + nick);
       }
-      
+      System.out.println(nick + " has connected to the server.");
       send(sc, "OK");   // Enviar para o cliente
     }
   }  
