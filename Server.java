@@ -13,6 +13,11 @@ public class Server{
   static private final Charset charset = Charset.forName("UTF8");
   static private final CharsetDecoder decoder = charset.newDecoder();
 
+  static private HashMap<String, ArrayList<SocketChannel>> rooms = new HashMap<String, ArrayList<SocketChannel>>();
+  static private HashMap<SocketChannel, String> users = new HashMap<SocketChannel, String>();
+  static private HashMap<SocketChannel, String> userStatus = new HashMap<SocketChannel, String>();
+  static private HashMap<SocketChannel, String> usersRoom = new HashMap<SocketChannel, String>();
+
 
   static public void main( String args[] ) throws Exception {
     // Parse port from command line
@@ -64,86 +69,129 @@ public class Server{
             // It's an incoming connection.  Register this socket with
             // the Selector so we can listen for input on it
             Socket s = ss.accept();
-            System.out.println( "Got connection from "+s );
+          System.out.println( "Got connection from "+s );
 
             // Make sure to make it non-blocking, so we can use a selector
             // on it.
-            SocketChannel sc = s.getChannel();
-            sc.configureBlocking( false );
+          SocketChannel sc = s.getChannel();
+          sc.configureBlocking( false );
 
             // Register it with the selector, for reading
-            sc.register( selector, SelectionKey.OP_READ );
+          sc.register( selector, SelectionKey.OP_READ );
 
-          } else if ((key.readyOps() & SelectionKey.OP_READ) ==
-            SelectionKey.OP_READ) {
+        } else if ((key.readyOps() & SelectionKey.OP_READ) ==
+          SelectionKey.OP_READ) {
 
-            SocketChannel sc = null;
+          SocketChannel sc = null;
 
-            try {
+          try {
 
               // It's incoming data on a connection -- process it
-              sc = (SocketChannel)key.channel();
-              boolean ok = processInput( sc );
+            sc = (SocketChannel)key.channel();
+            boolean ok = processInput( sc );
 
               // If the connection is dead, remove it from the selector
               // and close it
-              if (!ok) {
-                key.cancel();
-
-                Socket s = null;
-                try {
-                  s = sc.socket();
-                  System.out.println( "Closing connection to "+s );
-                  s.close();
-                } catch( IOException ie ) {
-                  System.err.println( "Error closing socket "+s+": "+ie );
-                }
-              }
-
-            } catch( IOException ie ) {
-
-              // On exception, remove this channel from the selector
+            if (!ok) {
               key.cancel();
 
+              Socket s = null;
               try {
-                sc.close();
-              } catch( IOException ie2 ) { System.out.println( ie2 ); }
-
-              System.out.println( "Closed "+sc );
+                s = sc.socket();
+                System.out.println( "Closing connection to "+s );
+                s.close();
+              } catch( IOException ie ) {
+                System.err.println( "Error closing socket "+s+": "+ie );
+              }
             }
+
+          } catch( IOException ie ) {
+
+              // On exception, remove this channel from the selector
+            key.cancel();
+
+            try {
+              sc.close();
+            } catch( IOException ie2 ) { System.out.println( ie2 ); }
+
+            System.out.println( "Closed "+sc );
           }
         }
+      }
 
         // We remove the selected keys, because we've dealt with them.
-        keys.clear();
-      }
-    } catch( IOException ie ) {
-      System.err.println( ie );
+      keys.clear();
     }
+  } catch( IOException ie ) {
+    System.err.println( ie );
   }
+}
 
 
   // Just read the message from the socket and send it to stdout
-  static private boolean processInput( SocketChannel sc ) throws IOException {
+static private boolean processInput( SocketChannel sc ) throws IOException {
     // Read the message to the buffer
-    buffer.clear();
-    sc.read( buffer );
-    buffer.flip();
+
+  userStatus.put(sc,"init"); //utilizador esta no servidor mas nao tem nome associado
+
+  buffer.clear();
+  sc.read( buffer );
+  buffer.flip();
 
     // If no data, close the connection
-    if (buffer.limit()==0) {
-      return false;
-    }
+  if (buffer.limit()==0) {
+    return false;
+  }
 
     // Reenvia a mensagem recebida para o cliente F5.c
-    sc.write(buffer);
-    buffer.flip();
+  sc.write(buffer);
+  buffer.flip();
 
     // Decode and print the message to stdout
-    String message = decoder.decode(buffer).toString();
-    System.out.print( message );
+  String message = decoder.decode(buffer).toString();
+    //System.out.println( message );
 
+  String[] parts = message.split(" ");
 
-    return true;
+  if(parts[0] == "/nick"){
+    nick(sc,parts[1]);
   }
+
+
+  else if(parts[0] == "/join"){
+    join(sc,parts[1]);
+  }
+
+  return true;
 }
+
+
+static private void nick(SocketChannel sc, String nick) throws IOException {
+    if(users.containsValue(nick)) // Se o nick já existe
+    send(sc, "ERROR");
+    else {
+      String oldnick = users.get(sc);
+      users.put(sc, nick);  // Regista o nickname (substitui para o novo nick se necessário)
+      userStatus.put(sc,"outside"); //o utilizador ja tem nome mas nao esta em nenhuma sala
+      // Se o utilizador já estiver num room
+      if(usersRoom.containsKey(sc)) {
+        // Enviar mensagem para os outros utilizadores do room
+        sendToOthers(sc, rooms.get(usersRoom.get(sc)), "NEWNICK " + oldnick + " " + nick);
+      }
+      
+      send(sc, "OK");   // Enviar para o cliente
+    }
+  }  
+
+
+  static private void send(SocketChannel sc, String message) throws IOException {
+    sc.write(encoder.encode(CharBuffer.wrap(message)));
+  }
+
+  static private void sendToOthers(SocketChannel user, ArrayList<SocketChannel> list, String message) throws IOException {
+    for(SocketChannel sc : list)
+      if(user != sc)
+        send(sc, message);
+    }
+
+  }

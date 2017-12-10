@@ -68,8 +68,8 @@ public class ChatClient {
         socketChannel = SocketChannel.open();
         socketChannel.connect(new InetSocketAddress(server, port));
 
-        if (socketChannel.isConnected())
-  				writeTextArea("Connected!");
+        //if (socketChannel.isConnected())
+  		//		writeTextArea("Connected!");
 
 
     }
@@ -94,7 +94,7 @@ public class ChatClient {
     // Método principal do objecto
     public void run() throws IOException {
         // PREENCHER AQUI
-        int bytesRead = 0;
+    /*    int bytesRead = 0;
         while(bytesRead != null) {
           ByteBuffer buf = ByteBuffer.allocate(16384);
           bytesRead = socketchannel.read(buf);
@@ -102,7 +102,7 @@ public class ChatClient {
           writeTextArea(new String(buf.array()));
 
         }
-
+*/
 
     }
 
