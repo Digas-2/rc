@@ -64,21 +64,12 @@ public class ChatClient {
 	}
 
 	public void writeTextArea(String text) {
-		writeTextArea(text, true);
-	}
-	public void writeTextArea(String text, boolean flagNewLine) {
-		if(flagNewLine)
-			chatArea.setText(chatArea.getText() + text + "\n");
-		else
-			chatArea.setText(chatArea.getText() + text);
+		chatArea.setText(chatArea.getText() + text + "\n");
 	}
 
 
-    // Método invocado sempre que o utilizador insere uma mensagem
-    // na caixa de entrada
 	public void newMessage(String message) throws IOException {
-        // PREENCHER AQUI com código que envia a mensagem ao servidor
-		ByteBuffer buf = ByteBuffer.allocate(48);
+		ByteBuffer buf = ByteBuffer.allocate(1024);
 		buf.clear();
 		buf.put(message.getBytes());
 
@@ -90,10 +81,7 @@ public class ChatClient {
 
 	}
 
-    // Método principal do objecto
 	public void run() throws IOException {
-        // PREENCHER AQUI
-
 		int bytesRead = 0;
 		while(bytesRead >= 0) {
 			ByteBuffer buf = ByteBuffer.allocate(16384);

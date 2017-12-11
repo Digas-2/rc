@@ -250,8 +250,12 @@ static private void nick(SocketChannel sc, String nick) throws IOException {
   }
 
   static private void bye(SocketChannel sc) throws IOException {
-    if(usersRoom.containsKey(sc)) 
-    leave(sc, true);
+    String user = users.get(sc);
+    String room = usersRoom.get(sc);
+
+    if(usersRoom.containsKey(sc)){
+      leave(sc, true);
+    }
     
     send(sc, "BYE");
     userStatus.put(sc,"outside");
