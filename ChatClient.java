@@ -64,12 +64,12 @@ public class ChatClient {
 	}
 
 	public void writeTextArea(String text) {
-		chatArea.setText(chatArea.getText() + text + "\n");
+		chatArea.setText(chatArea.getText() + text);
 	}
 
 
 	public void newMessage(String message) throws IOException {
-		ByteBuffer buf = ByteBuffer.allocate(1024);
+		ByteBuffer buf = ByteBuffer.allocate(16384);
 		buf.clear();
 		buf.put(message.getBytes());
 
@@ -85,8 +85,10 @@ public class ChatClient {
 		int bytesRead = 0;
 		while(bytesRead >= 0) {
 			ByteBuffer buf = ByteBuffer.allocate(16384);
+
 			bytesRead = socketChannel.read(buf);
 			writeTextArea(new String(buf.array()));
+			buf.clear();
 		}
 	}
 
