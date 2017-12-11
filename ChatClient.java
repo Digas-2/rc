@@ -8,12 +8,6 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.nio.charset.*;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-
 
 public class ChatClient {
 
@@ -67,14 +61,6 @@ public class ChatClient {
         // construtor, deve ser colocado aqui
 		socketChannel = SocketChannel.open();
 		socketChannel.connect(new InetSocketAddress(server, port));
-
-		while(true){
-			if(socketChannel.isConnected()){
-				writeTextArea("Connected!");
-				break;
-			}
-		}
-
 	}
 
 	public void writeTextArea(String text) {
@@ -107,24 +93,21 @@ public class ChatClient {
     // Método principal do objecto
 	public void run() throws IOException {
         // PREENCHER AQUI
-    /*    int bytesRead = 0;
-        while(bytesRead != null) {
-          ByteBuffer buf = ByteBuffer.allocate(16384);
-          bytesRead = socketchannel.read(buf);
 
-          writeTextArea(new String(buf.array()));
-
-        }
-*/
-
-    }
+		int bytesRead = 0;
+		while(bytesRead >= 0) {
+			ByteBuffer buf = ByteBuffer.allocate(16384);
+			bytesRead = socketChannel.read(buf);
+			writeTextArea(new String(buf.array()));
+		}
+	}
 
 
     // Instancia o ChatClient e arranca-o invocando o seu método run()
     // * NÃO MODIFICAR *
-    public static void main(String[] args) throws IOException {
-    	ChatClient client = new ChatClient(args[0], Integer.parseInt(args[1]));
-    	client.run();
-    }
+	public static void main(String[] args) throws IOException {
+		ChatClient client = new ChatClient(args[0], Integer.parseInt(args[1]));
+		client.run();
+	}
 
 }

@@ -157,15 +157,25 @@ static private boolean processInput( SocketChannel sc ) throws IOException {
 
   //System.out.println(parts[0]);
 
-  if(parts[0].equals("/nick")){
-    //System.out.println(parts[1]);    
+  if(parts[0].equals("/nick")){    
     nick(sc,parts[1]);
   }
 
-
-  /*else if(parts[0] == "/join"){
+  else if(parts[0].equals("/join")){    
     join(sc,parts[1]);
-  }*/ 
+  }
+
+  else if(parts[0].equals("/leave")){    
+    leave(sc,false);
+  }
+
+  else if(parts[0].equals("/bye")){    
+    bye(sc);
+  }
+  
+  else {
+    message(sc, message);
+  }
 
   return true;
 }
@@ -178,7 +188,7 @@ static private void nick(SocketChannel sc, String nick) throws IOException {
     else {
       String oldnick = users.get(sc);
       users.put(sc, nick);  // Regista o nickname (substitui para o novo nick se necessário)
-      userStatus.put(sc,"outside"); //o utilizador ja tem nome mas nao esta em nenhuma sala
+      userStatus.put(sc,"outside"); //o utilizador ja tem nome mas nao emsta em nenhuma sala
       // Se o utilizador já estiver num room
       if(usersRoom.containsKey(sc)) {
         // Enviar mensagem para os outros utilizadores do room
@@ -190,14 +200,106 @@ static private void nick(SocketChannel sc, String nick) throws IOException {
   }  
 
 
-  static private void send(SocketChannel sc, String message) throws IOException {
-    sc.write(encoder.encode(CharBuffer.wrap(message)));
+  static private void join(SocketChannel sc, String room) throws IOException {
+    String user = users.get(sc);
+    
+    if(user == null) {
+      send(sc, "ERROR");
+      return;
+    }
+    
+    if(usersRoom.containsKey(sc)) // Se o utilizador já estiver num room
+      leave(sc, true);      // sair desse room
+
+    if(rooms.containsKey(room)) { // Se o room já foi criado
+      if(!rooms.get(room).contains(sc)) { // Se o utilizador ainda não está no room
+        rooms.get(room).add(sc);    // é adicionado ao room
+        userStatus.put(sc,"inside");
+        usersRoom.put(sc, room);    // associa o utilizador com o room
+        
+        // Enviar mensagem para os outros utilizadores do room
+        sendToOthers(sc, rooms.get(room), "JOINED " + user);
+      }
+    }
+    else {    // Se o room ainda não foi criado
+      ArrayList<SocketChannel> roomList = new ArrayList<SocketChannel>();
+      roomList.add(sc);
+      rooms.put(room, roomList);
+      usersRoom.put(sc, room);
+      userStatus.put(sc,"inside");
+    }
+    
+    send(sc, "OK");
   }
 
-  static private void sendToOthers(SocketChannel user, ArrayList<SocketChannel> list, String message) throws IOException {
-    for(SocketChannel sc : list)
-      if(user != sc)
+  static private void leave(SocketChannel sc, boolean notif) throws IOException {
+    if(!usersRoom.containsKey(sc)) {
+      send(sc, "ERROR");
+      return;
+    }
+    
+    String user = users.get(sc);
+    String room = usersRoom.get(sc);
+    rooms.get(room).remove(sc);
+    usersRoom.remove(sc);
+
+    sendToOthers(sc, rooms.get(room), "LEFT " + user);
+    
+    if(!notif)
+      send(sc, "OK");
+  }
+
+  static private void bye(SocketChannel sc) throws IOException {
+    if(usersRoom.containsKey(sc)) 
+    leave(sc, true);
+    
+    send(sc, "BYE");
+    userStatus.put(sc,"outside");
+    users.remove(sc);
+    sc.close();
+  }
+
+  static private void message(SocketChannel sc, String message) throws IOException {
+    if(!usersRoom.containsKey(sc)) {
+      send(sc, "ERROR");
+      return;
+    }
+    
+    if(message.charAt(0) == '/')
+      message = message.substring(1);
+    
+    String user = users.get(sc);
+    String room = usersRoom.get(sc);
+
+    // Enviar mensagem para todos os utilizadores do room
+    sendToList(rooms.get(room), "MESSAGE " + user + " " + message);
+  }
+  
+  static private void privateMessage(SocketChannel sc, String sendTo, String message) throws IOException {
+    String user = users.get(sc);
+    
+    for(Entry<SocketChannel, String> entry : users.entrySet())
+      if(entry.getValue().equals(sendTo))
+        send(entry.getKey(), "PRIVATE " + user + ' ' + message);  // Enviar a mensagem privada para o destinatário
+
+      send(sc, "OK");
+    }
+
+
+    static private void sendToList(ArrayList<SocketChannel> list, String message) throws IOException {
+      for(SocketChannel sc : list)
         send(sc, message);
     }
 
-  }
+    static private void send(SocketChannel sc, String message) throws IOException {
+      sc.write(encoder.encode(CharBuffer.wrap(message)));
+    }
+
+    static private void sendToOthers(SocketChannel user, ArrayList<SocketChannel> list, String message) throws IOException {
+      for(SocketChannel sc : list)
+        if(user != sc)
+          send(sc, message);
+      }
+
+    }
+
